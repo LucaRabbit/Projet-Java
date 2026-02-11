@@ -1,6 +1,8 @@
 package com.test.di25;
 
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +15,7 @@ public class Menu {
     private Long id;
 
     private String nom;
+    private BigDecimal prix;
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
@@ -63,4 +66,32 @@ public class Menu {
     public void setPlats(List<Plat> plats) {
         this.plats = plats;
     }
+
+    public BigDecimal getPrix() {
+        return prix;
+    }
+
+    public void setPrix(BigDecimal prix) {
+        this.prix = prix;
+    }
+
+    public void recalculerPrix() {
+        if (plats == null || plats.isEmpty()) {
+            this.prix = null; // pas de prix si aucun plat
+            return;
+        }
+
+        double totalPlats = plats.stream()
+                .mapToDouble(p -> p.getPrix().doubleValue())
+                .sum();
+
+        double reduction = 0.10; // 10 % de réduction
+        double prixMenu = totalPlats * (1 - reduction);
+
+        // Arrondi à 0.50 €
+        prixMenu = Math.round(prixMenu * 2) / 2.0;
+
+        this.prix = BigDecimal.valueOf(prixMenu);
+    }
+
 }

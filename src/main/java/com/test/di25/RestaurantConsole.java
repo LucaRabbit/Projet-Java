@@ -3,7 +3,9 @@ package com.test.di25;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class RestaurantConsole {
 
@@ -264,11 +266,31 @@ public class RestaurantConsole {
         }
 
         IO.println("\n--- Liste des plats ---");
-        for (Plat p : plats) {
-            System.out.printf("[%d] %s - %bd, %s%n",
-                    p.getId(), p.getNom(), p.getPrix(), p.getDescription());
+
+        // Regrouper par catégorie
+        Map<String, List<Plat>> platsParCategorie = plats.stream()
+                .collect(Collectors.groupingBy(Plat::getCategorie));
+
+        // Ordre d'affichage souhaité
+        List<String> ordre = List.of("Entrée", "Plat", "Dessert");
+
+        for (String categorie : ordre) {
+            List<Plat> liste = platsParCategorie.get(categorie);
+            if (liste == null || liste.isEmpty()) continue;
+
+            IO.println("\n" + categorie + "s :");
+
+            for (Plat p : liste) {
+                System.out.printf("  [%d] %s - %.2f € - %s%n",
+                        p.getId(),
+                        p.getNom(),
+                        p.getPrix().doubleValue(),
+                        p.getDescription()
+                );
+            }
         }
-        System.out.println();
+
+        IO.println();
     }
 
     // Ajouter un plat a un restaurant
@@ -397,13 +419,41 @@ public class RestaurantConsole {
         }
 
         IO.println("\n--- Liste des menus ---");
+
         for (Menu m : menus) {
-            IO.println("Nom: " + m.getNom() + " - ID: " + m.getId());
-            IO.println("Plats :");
-            for (Plat p : m.getPlats()) {
-                IO.println("    - " + p.getNom() + " - ID: " + p.getId());
+
+            IO.println("\nNom : " + m.getNom() + " - ID : " + m.getId());
+
+            // Affichage du prix du menu
+            if (m.getPrix() != null) {
+                System.out.printf("Prix du menu : %.2f €%n", m.getPrix().doubleValue());
+            } else {
+                IO.println("Prix du menu : non défini");
+            }
+
+            // Regrouper les plats par catégorie
+            Map<String, List<Plat>> platsParCategorie = m.getPlats().stream()
+                    .collect(Collectors.groupingBy(Plat::getCategorie));
+
+            List<String> ordre = List.of("Entrée", "Plat", "Dessert");
+
+            for (String categorie : ordre) {
+                List<Plat> liste = platsParCategorie.get(categorie);
+                if (liste == null || liste.isEmpty()) continue;
+
+                IO.println("  " + categorie + "s :");
+
+                for (Plat p : liste) {
+                    System.out.printf("    - [%d] %s (%.2f €)%n",
+                            p.getId(),
+                            p.getNom(),
+                            p.getPrix().doubleValue()
+                    );
+                }
             }
         }
+
+        IO.println();
     }
 
     // Créér un nouveau menu d'un restaurant
@@ -451,9 +501,15 @@ public class RestaurantConsole {
 
         // Ajouter le plat
         menu.addPlat(plat);
+
+        // Recalculer le prix
+        menu.recalculerPrix();
+
         menuDao.save(menu);
 
-        IO.println("Plat ajouté au menu.");
+        IO.println("Plat ajouté au menu. Nouveau prix : " +
+                (menu.getPrix() != null ? menu.getPrix() + " €" : "non défini"));
+
     }
 
     // Retirer un plat du menu d'un restaurant
@@ -482,9 +538,14 @@ public class RestaurantConsole {
         }
 
         m.removePlat(platDansMenu);
+
+        // Recalculer le prix
+        m.recalculerPrix();
+
         menuDao.save(m);
 
-        IO.println("Plat retiré du menu.");
+        IO.println("Plat retiré du menu. Nouveau prix : " +
+                (m.getPrix() != null ? m.getPrix() + " €" : "non défini"));
     }
 
     // Supprimer un menu d'un restaurant

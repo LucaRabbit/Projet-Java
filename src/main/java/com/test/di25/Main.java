@@ -45,7 +45,7 @@ public class Main {
 
     private static void afficherMenuPrincipal() {
         IO.println("\n=== MENU PRINCIPAL ===");
-        IO.println("1. Générer des données de test (Faker");
+        IO.println("1. Générer des données de test (Faker)");
         IO.println("2. Gestion des restaurants");
         IO.println("3. Gestion des employés");
         IO.println("0. Quitter");

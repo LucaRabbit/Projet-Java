@@ -95,7 +95,7 @@ public class EmployeConsole {
         }
         System.out.println("--- Liste des employés ---");
         for (Employe e : liste) {
-            System.out.printf("[%d] %s - %s, %s %s%n",
+            System.out.printf("[%d] %s - %s, %s %s €%n",
                     e.getId(), e.getNom(), e.getPrenom(), e.getPoste(), e.getSalaire());
         }
         System.out.println();

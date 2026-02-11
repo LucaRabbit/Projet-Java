@@ -17,6 +17,7 @@ public class Plat {
     private String nom;
     private BigDecimal prix;
     private String description;
+    private String categorie;
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
@@ -75,5 +76,12 @@ public class Plat {
     }
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCategorie() {
+        return categorie;
+    }
+    public void setCategorie(String categorie) {
+        this.categorie = categorie;
     }
 }

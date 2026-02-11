@@ -8,7 +8,7 @@ import org.hibernate.cfg.Configuration;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.Locale;
+import java.util.*;
 
 public class InitDatabase {
 
@@ -42,20 +42,58 @@ public class InitDatabase {
                 restaurant.setCodePostal(faker.address().zipCode());
                 restaurant.setVille(faker.address().city());
 
+                session.persist(restaurant);
+
                 // --- Génération des plats indépendants ---
+                String dessert = faker.options().option(
+                        "Tiramisu",
+                        "Crème brûlée",
+                        "Mousse au chocolat",
+                        "Panna cotta",
+                        "Tarte aux pommes",
+                        "Fondant au chocolat",
+                        "Île flottante",
+                        "Profiteroles",
+                        "Cheesecake",
+                        "Mille-feuille"
+                );
+
+                Set<String> nomsPlats = new HashSet<>();
+
                 int nbPlatsIndep = faker.number().numberBetween(5, 12);
+
                 for (int p = 0; p < nbPlatsIndep; p++) {
 
+                    String[] categories = {"Entrée", "Plat", "Dessert"};
+                    String categorie = faker.options().option(categories);
+
+                    String nomPlat = switch (categorie) {
+                        case "Entrée" -> faker.food().vegetable() + " " + faker.food().spice();
+                        case "Plat" -> faker.food().dish();
+                        default -> dessert;
+                    };
+
+                    if (nomsPlats.contains(nomPlat)) {
+                        nomPlat = nomPlat + " " + faker.number().randomDigit();
+                    }
+                    nomsPlats.add(nomPlat);
+
+                    BigDecimal prix = switch (categorie) {
+                        case "Entrée" -> BigDecimal.valueOf(faker.number().randomDouble(2, 5, 12));
+                        case "Plat" -> BigDecimal.valueOf(faker.number().randomDouble(2, 12, 25));
+                        default -> BigDecimal.valueOf(faker.number().randomDouble(2, 4, 10));
+                    };
+
                     Plat plat = new Plat();
-                    plat.setNom(faker.food().dish());
-                    plat.setPrix(BigDecimal.valueOf(faker.number().randomDouble(2, 8, 25)));
-                    plat.setDescription(faker.food().ingredient());
+                    plat.setNom(nomPlat);
+                    plat.setPrix(prix);
+                    plat.setDescription(faker.lorem().sentence(8));
+                    plat.setCategorie(categorie);
                     plat.setRestaurant(restaurant);
 
                     restaurant.getPlats().add(plat);
                     session.persist(plat);
 
-                    // Stock
                     Stock stock = new Stock();
                     stock.setPlat(plat);
                     stock.setQuantite(faker.number().numberBetween(5, 50));
@@ -66,21 +104,63 @@ public class InitDatabase {
 
                 // --- Génération des menus ---
                 int nbMenus = faker.number().numberBetween(1, 4);
+
                 for (int m = 1; m <= nbMenus; m++) {
 
                     Menu menu = new Menu();
-                    menu.setNom("Menu " + m);
+                    menu.setNom(faker.options().option(
+                            "Menu Découverte",
+                            "Menu Tradition",
+                            "Menu Gourmand",
+                            "Menu Dégustation",
+                            "Menu du Chef"
+                    ));
                     menu.setRestaurant(restaurant);
 
-                    int nbPlatsMenu = faker.number().numberBetween(2, 5);
-                    for (int p = 0; p < nbPlatsMenu; p++) {
+                    // Séparer les plats par catégorie
+                    List<Plat> entrees = restaurant.getPlats().stream()
+                            .filter(p -> "Entrée".equals(p.getCategorie()))
+                            .toList();
 
-                        Plat platChoisi = restaurant.getPlats().get(
-                                faker.number().numberBetween(0, restaurant.getPlats().size())
-                        );
+                    List<Plat> plats = restaurant.getPlats().stream()
+                            .filter(p -> "Plat".equals(p.getCategorie()))
+                            .toList();
 
-                        menu.addPlat(platChoisi); // Many-to-Many
+                    List<Plat> desserts = restaurant.getPlats().stream()
+                            .filter(p -> "Dessert".equals(p.getCategorie()))
+                            .toList();
+
+                    // Vérifier qu'on peut créer un menu complet
+                    if (entrees.isEmpty() || plats.isEmpty() || desserts.isEmpty()) {
+                        continue; // impossible → on saute ce menu
                     }
+
+                    // --- 1 Entrée ---
+                    Plat entree = faker.options().option(entrees.toArray(new Plat[0]));
+                    if (!menu.getPlats().contains(entree)) {
+                        menu.addPlat(entree);
+                    }
+
+                    // --- 1 ou 2 Plats ---
+                    int nbPlatsMenu = faker.number().numberBetween(1, 3);
+
+                    List<Plat> platsCopy = new ArrayList<>(plats);
+                    platsCopy.remove(entree); // sécurité si jamais
+
+                    for (int pm = 0; pm < nbPlatsMenu && !platsCopy.isEmpty(); pm++) {
+                        Plat platChoisi = faker.options().option(platsCopy.toArray(new Plat[0]));
+                        menu.addPlat(platChoisi);
+                        platsCopy.remove(platChoisi); // éviter les doublons
+                    }
+
+                    // --- 1 Dessert ---
+                    Plat dessertChoisi = faker.options().option(desserts.toArray(new Plat[0]));
+                    if (!menu.getPlats().contains(dessertChoisi)) {
+                        menu.addPlat(dessertChoisi);
+                    }
+
+                    // --- Calcul automatique du prix du menu ---
+                    menu.recalculerPrix();
 
                     restaurant.addMenu(menu);
                     session.persist(menu);
@@ -88,6 +168,7 @@ public class InitDatabase {
 
                 // Tables
                 int nbTables = faker.number().numberBetween(3, 12);
+
                 for (int j = 1; j <= nbTables; j++) {
 
                     TableResto table = new TableResto();
@@ -96,70 +177,92 @@ public class InitDatabase {
                     int places = faker.options().option(2, 4, 6);
                     table.setPlaces(places);
 
-                    table.setEstDisponible(faker.bool().bool());
+                    // Une table a 70% de chances d'être occupée
+                    boolean occupee = faker.random().nextDouble() < 0.7;
+                    table.setEstDisponible(!occupee);
+
                     restaurant.addTable(table);
 
-                    // Clients
-                    int nbClients = faker.number().numberBetween(0, table.getPlaces());
-                    for (int c = 0; c < nbClients; c++) {
+                    if (!occupee) {
+                        // Table libre → pas de clients, pas de commande
+                        continue;
+                    }
 
+                    // --- Clients assis à la table ---
+                    int nbClients = faker.number().numberBetween(1, table.getPlaces());
+
+                    List<Client> clients = new ArrayList<>();
+
+                    for (int c = 0; c < nbClients; c++) {
                         Client client = new Client();
                         client.setNom(faker.name().lastName());
                         client.setPrenom(faker.name().firstName());
                         client.setTelephone(faker.phoneNumber().cellPhone());
 
                         session.persist(client);
+                        clients.add(client);
+                    }
 
-                        // Commande
-                        Commande commande = new Commande();
-                        commande.setClient(client);
-                        commande.setTable(table);
-                        commande.setDateHeure(
-                                LocalDateTime.now()
-                                        .minusMinutes(faker.number().numberBetween(5, 300))
-                                        .withNano(0)
+                    // --- Commande unique pour la table ---
+                    Commande commande = new Commande();
+                    commande.setTable(table);
+
+                    // Client principal (celui qui paie)
+                    commande.setClient(clients.getFirst());
+
+                    commande.setDateHeure(
+                            LocalDateTime.now()
+                                    .minusMinutes(faker.number().numberBetween(5, 300))
+                                    .withNano(0)
+                    );
+
+                    String[] statuts = {"EN_COURS", "TERMINEE", "PAYEE"};
+                    commande.setStatut(faker.options().option(statuts));
+
+                    BigDecimal total = BigDecimal.ZERO;
+
+                    // --- Plats commandés ---
+                    int nbPlats = faker.number().numberBetween(nbClients, nbClients * 3);
+
+                    for (int p = 0; p < nbPlats; p++) {
+                        Plat platChoisi = faker.options().option(
+                                restaurant.getPlats().toArray(new Plat[0])
                         );
 
-                        // Statut aléatoire
-                        String[] statuts = {"EN_COURS", "TERMINEE", "PAYEE"};
-                        commande.setStatut(statuts[faker.number().numberBetween(0, statuts.length)]);
+                        commande.addPlat(platChoisi);
+                        total = total.add(platChoisi.getPrix());
+                    }
 
-                        // Total en BigDecimal
-                        BigDecimal total = BigDecimal.ZERO;
+                    // --- Menus commandés ---
+                    // --- Menus commandés ---
+                    int nbMenusCommande = faker.number().numberBetween(0, 2);
 
-                        // Plusieurs plats
-                        int nbPlats = faker.number().numberBetween(1, 4);
-                        for (int p = 0; p < nbPlats; p++) {
-                            Plat platChoisi = restaurant.getPlats().get(
-                                    faker.number().numberBetween(0, restaurant.getPlats().size())
-                            );
-                            commande.addPlat(platChoisi);
-
-                            total = total.add(platChoisi.getPrix());
-                        }
-
-                        // Plusieurs menus
-                        int nbMenusCommande = faker.number().numberBetween(0, 3);
+                    if (!restaurant.getMenus().isEmpty()) {
                         for (int m = 0; m < nbMenusCommande; m++) {
-                            Menu menuChoisi = restaurant.getMenus().get(
-                                    faker.number().numberBetween(0, restaurant.getMenus().size())
+                            Menu menuChoisi = faker.options().option(
+                                    restaurant.getMenus().toArray(new Menu[0])
                             );
+
                             commande.addMenu(menuChoisi);
 
-                            double prixMenu = menuChoisi.getPlats().stream()
-                                    .mapToDouble(p -> p.getPrix().doubleValue())
-                                    .average()
-                                    .orElse(15.0);
+                            // Utiliser directement le prix du menu si tu l'as
+                            BigDecimal prixMenu = menuChoisi.getPrix();
+                            if (prixMenu == null) {
+                                // fallback si jamais
+                                double moyenne = menuChoisi.getPlats().stream()
+                                        .mapToDouble(p -> p.getPrix().doubleValue())
+                                        .average()
+                                        .orElse(15.0);
+                                prixMenu = BigDecimal.valueOf(moyenne);
+                            }
 
-                            total = total.add(BigDecimal.valueOf(prixMenu));
+                            total = total.add(prixMenu);
                         }
-
-                        // Arrondi final
-                        total = total.setScale(2, RoundingMode.HALF_UP);
-                        commande.setTotal(total.doubleValue());
-
-                        session.persist(commande);
                     }
+
+                    commande.setTotal(total.setScale(2, RoundingMode.HALF_UP).doubleValue());
+
+                    session.persist(commande);
                 }
 
                 // Employés
@@ -173,7 +276,7 @@ public class InitDatabase {
                     restaurant.addEmploye(employe);
                 }
 
-                session.persist(restaurant);
+                session.flush();
             }
 
             session.getTransaction().commit();
