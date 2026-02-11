@@ -10,27 +10,7 @@ import java.util.Optional;
 
 public class EmployeDao {
 
-    private final SessionFactory sessionFactory;
-
-    public EmployeDao() {
-        this.sessionFactory = new Configuration()
-            .configure("hibernate.cfg.xml")
-            .addAnnotatedClass(Restaurant.class)
-            .addAnnotatedClass(TableResto.class)
-            .addAnnotatedClass(Commande.class)
-            .addAnnotatedClass(Employe.class)
-            .addAnnotatedClass(Menu.class)
-            .addAnnotatedClass(Plat.class)
-            .addAnnotatedClass(Client.class)
-            .addAnnotatedClass(Stock.class)
-            .buildSessionFactory();
-    }
-
-    public void close() {
-        if (sessionFactory != null && sessionFactory.isOpen()) {
-            sessionFactory.close();
-        }
-    }
+    private final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
     // Création d'un nouveau employé
     public Employe create(Employe employe) {

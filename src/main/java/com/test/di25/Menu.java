@@ -32,19 +32,35 @@ public class Menu {
     }
 
     public void removePlat(Plat plat) {
-        plats.remove(plat);
+        this.plats.remove(plat);
         plat.getMenus().remove(this);
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
+    public String getNom() {
+        return nom;
+    }
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
 
-    public Restaurant getRestaurant() { return restaurant; }
-    public void setRestaurant(Restaurant restaurant) { this.restaurant = restaurant; }
+    public Restaurant getRestaurant() {
+        return restaurant;
+    }
+    public void setRestaurant(Restaurant restaurant) {
+        this.restaurant = restaurant;
+    }
 
-    public List<Plat> getPlats() { return plats; }
-    public void setPlats(List<Plat> plats) { this.plats = plats; }
+    public List<Plat> getPlats() {
+        return plats;
+    }
+    public void setPlats(List<Plat> plats) {
+        this.plats = plats;
+    }
 }

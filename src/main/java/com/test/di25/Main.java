@@ -14,8 +14,11 @@ public class Main {
 
     public static void main() {
 
+        PlatDao platDao = new PlatDao();
+        MenuDao menuDao = new MenuDao();
+
         RestaurantDao restaurantDao = new RestaurantDao();
-        RestaurantConsole restaurantConsole = new RestaurantConsole(restaurantDao);
+        RestaurantConsole restaurantConsole = new RestaurantConsole(restaurantDao, platDao, menuDao);
 
         EmployeDao  employeDao = new EmployeDao();
         EmployeConsole employeConsole = new EmployeConsole(employeDao, restaurantDao);
