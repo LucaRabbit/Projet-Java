@@ -36,11 +36,11 @@ public class RestaurantConsole {
 
     private static void afficherMenu() {
         IO.println("\n--- GESTION DES RESTAURANTS ---");
-        IO.println("1. Créer un restaurant "); // OK
-        IO.println("2. Lister tous les restaurants"); // OK
-        IO.println("3. Afficher un restaurant par id"); // OK
-        IO.println("4. Modifier un restaurant"); // OK
-        IO.println("5. Supprimer un restaurant par id"); // OK
+        IO.println("1. Créer un restaurant ");
+        IO.println("2. Lister tous les restaurants");
+        IO.println("3. Afficher un restaurant par id");
+        IO.println("4. Modifier un restaurant");
+        IO.println("5. Supprimer un restaurant par id");
         IO.println("0. Retour");
         IO.print("Votre choix : ");
     }
@@ -133,7 +133,6 @@ public class RestaurantConsole {
             System.out.println("Id invalide.\n");
         }
     }
-
 
      // Supprimer un restaurant via son id
     private void supprimer() {

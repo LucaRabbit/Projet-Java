@@ -14,8 +14,11 @@ public class Main {
 
     public static void main() {
 
-        RestaurantDao dao = new RestaurantDao();
-        RestaurantConsole restaurantConsole = new RestaurantConsole(dao);
+        RestaurantDao restaurantDao = new RestaurantDao();
+        RestaurantConsole restaurantConsole = new RestaurantConsole(restaurantDao);
+
+        EmployeDao  employeDao = new EmployeDao();
+        EmployeConsole employeConsole = new EmployeConsole(employeDao, restaurantDao);
 
         try {
             boolean continuer = true;
@@ -25,6 +28,7 @@ public class Main {
                 switch (choix) {
                     case "1" -> InitDatabase.init();
                     case "2" -> restaurantConsole.run();
+                    case "3" -> employeConsole.run();
                     case "0" -> {
                         continuer = false;
                         IO.println("Au revoir");
@@ -40,6 +44,7 @@ public class Main {
         IO.println("\n=== MENU PRINCIPAL ===");
         IO.println("1. Générer des données de test (Faker");
         IO.println("2. Gestion des restaurants");
+        IO.println("3. Gestion des employés");
         IO.println("0. Quitter");
         IO.println("Votre choix : ");
     }
