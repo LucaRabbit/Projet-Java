@@ -56,6 +56,7 @@ public class RestaurantConsole {
     }
 
     // Créer un restaurant
+// Créer un restaurant
     private void creer() {
         IO.println("Nom : ");
         String nom = IO.readln();
@@ -66,35 +67,54 @@ public class RestaurantConsole {
         IO.println("Ville : ");
         String ville = IO.readln();
 
-        IO.println("Nombre de tables dans ce restaurant : ");
-        int nbTables = Integer.parseInt(IO.readln());
-
         Restaurant r = new Restaurant();
         r.setNom(nom);
         r.setAdresse(adresse);
         r.setCodePostal(codePostal);
         r.setVille(ville);
 
-        // Création des tables
+        // Saisie des types de tables
+        IO.println("Nombre de tables de 2 places : ");
+        int nb2 = Integer.parseInt(IO.readln());
+
+        IO.println("Nombre de tables de 4 places : ");
+        int nb4 = Integer.parseInt(IO.readln());
+
+        IO.println("Nombre de tables de 6 places : ");
+        int nb6 = Integer.parseInt(IO.readln());
+
         List<TableResto> tables = new ArrayList<>();
+        int numero = 1;
 
-        for (int i = 1; i <= nbTables; i++) {
-            IO.println("Nombre de places pour la table " + i + " : ");
-            int places = Integer.parseInt(IO.readln());
+        // Création des tables de 2 places
+        for (int i = 0; i < nb2; i++) {
+            tables.add(creerTable(numero++, 2, r));
+        }
 
-            TableResto t = new TableResto();
-            t.setNumero(i);
-            t.setPlaces(places);
-            t.setEstDisponible(true);
-            t.setRestaurant(r);
+        // Création des tables de 4 places
+        for (int i = 0; i < nb4; i++) {
+            tables.add(creerTable(numero++, 4, r));
+        }
 
-            tables.add(t);
+        // Création des tables de 6 places
+        for (int i = 0; i < nb6; i++) {
+            tables.add(creerTable(numero++, 6, r));
         }
 
         r.setTables(tables);
         restaurantDao.create(r);
 
         IO.println("Restaurant créé avec l'id : " + r.getId());
+        IO.println("Tables créées : " + tables.size());
+    }
+
+    private TableResto creerTable(int numero, int places, Restaurant r) {
+        TableResto t = new TableResto();
+        t.setNumero(numero);
+        t.setPlaces(places);
+        t.setEstDisponible(true);
+        t.setRestaurant(r);
+        return t;
     }
 
     // Lister tous les restaurants

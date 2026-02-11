@@ -92,7 +92,10 @@ public class InitDatabase {
 
                     TableResto table = new TableResto();
                     table.setNumero(j);
-                    table.setPlaces(faker.number().numberBetween(2, 10));
+
+                    int places = faker.options().option(2, 4, 6);
+                    table.setPlaces(places);
+
                     table.setEstDisponible(faker.bool().bool());
                     restaurant.addTable(table);
 
