@@ -39,7 +39,7 @@ public class Plat {
         this.menus = menus;
     }
 
-    @OneToOne(mappedBy = "plat")
+    @OneToOne(mappedBy = "plat", cascade = CascadeType.ALL, orphanRemoval = true)
     private Stock stock;
 
     public Stock getStock() {

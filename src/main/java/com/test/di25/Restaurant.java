@@ -19,7 +19,7 @@ public class Restaurant {
     private String codePostal;
     private String ville;
 
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<TableResto> tables = new ArrayList<>();
 
     public List<TableResto> getTables() {

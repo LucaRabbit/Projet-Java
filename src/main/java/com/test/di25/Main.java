@@ -40,7 +40,6 @@ public class Main {
         IO.println("\n=== MENU PRINCIPAL ===");
         IO.println("1. Générer des données de test (Faker");
         IO.println("2. Gestion des restaurants");
-        IO.println("3. Gestion");
         IO.println("0. Quitter");
         IO.println("Votre choix : ");
     }

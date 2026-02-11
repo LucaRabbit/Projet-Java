@@ -31,6 +31,11 @@ public class Menu {
         plat.getMenus().add(this);
     }
 
+    public void removePlat(Plat plat) {
+        plats.remove(plat);
+        plat.getMenus().remove(this);
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
