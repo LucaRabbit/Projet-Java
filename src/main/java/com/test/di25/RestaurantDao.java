@@ -7,11 +7,14 @@ import org.hibernate.Transaction;
 import java.util.List;
 import java.util.Optional;
 
-public class RestaurantDao {
+// Un DAO (Data Access Object) -> une couche qui isole la logique d’accès aux données du reste de l’application
+// Le mappage consiste à transformer les données de la base (tables, colonnes) en objets Java (classes, attributs)
 
+public class RestaurantDao {
+    // Utilisation de Hibernate
     private final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
-    // Création d'un nouveau restaurant
+    // Enregistrer un nouveau restaurant
     public Restaurant create(Restaurant restaurant) {
         try (Session session = sessionFactory.openSession()) {
             Transaction tx = session.beginTransaction();
@@ -21,8 +24,7 @@ public class RestaurantDao {
         }
     }
 
-    // Lister tous les restaurants
-    @SuppressWarnings("unchecked")
+    // Récupère tous les restaurants
     public List<Restaurant> findAll() {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("from Restaurant r order by r.id", Restaurant.class).list();
@@ -51,14 +53,15 @@ public class RestaurantDao {
     public boolean deleteById(Long restaurantId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction tx = session.beginTransaction();
-
+            // Charger le restaurant
             Restaurant r = session.get(Restaurant.class, restaurantId);
+            // Pas trouvé
             if (r == null) {
                 tx.rollback();
                 return false;
             }
 
-            // Vérifier s'il existe des commandes pour ce restaurant
+            // Vérifier s'il existe des commandes associées au restaurant
             Long countCmd = session.createQuery(
                     "select count(*) from Commande c where c.table.restaurant.id = :id",
                     Long.class
@@ -77,14 +80,15 @@ public class RestaurantDao {
             r.getTables().size();
             r.getEmployes().size();
 
-            // Nettoyer les relations ManyToMany (menus ↔ plats)
+            // Nettoyer les relations ManyToMany (menus <-> plats)
+            // Suppression des liens dans la table de jointure
             for (Menu m : r.getMenus()) {
                 m.getPlats().size();
                 for (Plat p : m.getPlats()) {
                     p.getMenus().remove(m);
                 }
             }
-
+            // Suppression des entités liées au restaurant
             // Supprimer les plats (+ les stocks via orphanRemoval)
             for (Plat p : r.getPlats()) {
                 session.remove(p);

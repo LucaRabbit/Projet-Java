@@ -234,7 +234,6 @@ public class InitDatabase {
                     }
 
                     // --- Menus commandés ---
-                    // --- Menus commandés ---
                     int nbMenusCommande = faker.number().numberBetween(0, 2);
 
                     if (!restaurant.getMenus().isEmpty()) {
@@ -245,10 +244,10 @@ public class InitDatabase {
 
                             commande.addMenu(menuChoisi);
 
-                            // Utiliser directement le prix du menu si tu l'as
+                            // Utiliser directement le prix du menu si existant
                             BigDecimal prixMenu = menuChoisi.getPrix();
                             if (prixMenu == null) {
-                                // fallback si jamais
+                                // fallback sinon
                                 double moyenne = menuChoisi.getPlats().stream()
                                         .mapToDouble(p -> p.getPrix().doubleValue())
                                         .average()

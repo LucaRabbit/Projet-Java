@@ -7,19 +7,22 @@ import org.hibernate.cfg.Configuration;
 
 import java.util.List;
 
-public class MenuDao {
+// Un DAO (Data Access Object) -> une couche qui isole la logique d’accès aux données du reste de l’application
+// Le mappage consiste à transformer les données de la base (tables, colonnes) en objets Java (classes, attributs)
 
+public class MenuDao {
+    // Utilisation de Hibernate
     private final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
     // Récuperer un menu via id
     public Menu findById(Long id) {
         try (Session session = sessionFactory.openSession()) {
+            // Charger le menu
             Menu m = session.get(Menu.class, id);
             if (m != null) {
-                // Charger les plats
+                // Charger les plats du menu
                 m.getPlats().size();
-
-                // Charger les menus de chaque plat
+                // Charger les menus associés à chaque plat
                 for (Plat p : m.getPlats()) {
                     p.getMenus().size();
                 }
@@ -28,7 +31,7 @@ public class MenuDao {
         }
     }
 
-    // Lister les menus d'un restaurant
+    // Récuperer tous les menus d'un restaurant
     public List<Menu> findByRestaurant(Long restaurantId) {
         try (Session session = sessionFactory.openSession()) {
 
@@ -37,7 +40,7 @@ public class MenuDao {
                     Menu.class
             ).setParameter("id", restaurantId).list();
 
-            // Charger les plats
+            // Charger les plats associés
             for (Menu m : menus) {
                 m.getPlats().size();
             }
@@ -46,7 +49,7 @@ public class MenuDao {
         }
     }
 
-    // Sauvegarder un menu
+    // Sauvegarder/Mettre à jour un menu
     public void save(Menu menu) {
         try (Session session = sessionFactory.openSession()) {
             Transaction tx = session.beginTransaction();
@@ -59,14 +62,14 @@ public class MenuDao {
     public void delete(Long menuId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction tx = session.beginTransaction();
-
+            // Charger le menu
             Menu menu = session.get(Menu.class, menuId);
             if (menu == null) {
                 tx.rollback();
                 return;
             }
 
-            // Vérifier si le menu est utilisé dans une commande
+            // Vérifier si le menu est associé à une commande
             Long count = session.createQuery(
                     "select count(*) from Commande c join c.menus m where m.id = :id",
                     Long.class

@@ -8,13 +8,15 @@ import org.hibernate.cfg.Configuration;
 import java.util.List;
 
 public class PlatDao {
-
+    // Utilisation de Hibernate
     private final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
     // Récuperer un plat via id
     public Plat findById(Long id) {
         try (Session session = sessionFactory.openSession()) {
+            // Charger le plat
             Plat p = session.get(Plat.class, id);
+            // Charger les menus associés
             if (p != null) {
                 p.getMenus().size();
             }
@@ -22,7 +24,7 @@ public class PlatDao {
         }
     }
 
-    // Lister les plats d'un restaurant via id
+    // Récuperer tous les plats d'un restaurant via id
     public List<Plat> findByRestaurant(Long restaurantId) {
         try (Session session = sessionFactory.openSession()) {
 
@@ -40,7 +42,7 @@ public class PlatDao {
         }
     }
 
-    // Sauvergarder un plat
+    // Sauvergarder/Mettre à jour un plat
     public void save(Plat plat) {
         try (Session session = sessionFactory.openSession()) {
             Transaction tx = session.beginTransaction();
@@ -53,7 +55,7 @@ public class PlatDao {
     public void delete(Long platId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction tx = session.beginTransaction();
-
+            // Charger le plat
             Plat plat = session.get(Plat.class, platId);
             if (plat == null) {
                 tx.rollback();
